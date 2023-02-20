@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Sala de chat</title>
+  <link rel="stylesheet" href="chat.css">
+  <!-- Add Bootstrap and Socket.IO JavaScript -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"
+    integrity="sha384-G6Q2T6zrV6QY9hEoxnLq3+qNjv7KGzTwGXoJHuy8zAaA1vRr6U+T2jOa6zfoV6h" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: Arial;
+    }
+
+    body {
+      background-color: #f4f7f6;
+      margin-top: 20px;
+    }
+
+    .chat .chat-header {
+      padding: 15px 20px;
+      border-bottom: 2px solid #f4f7f6
+    }
+
+    .chat .chat-header img {
+      float: left;
+      border-radius: 40px;
+      width: 40px
+    }
+
+    .chat .chat-header .chat-about {
+      float: left;
+      padding-left: 10px
+    }
+
+    .chat .chat-history {
+      padding: 20px;
+      border-bottom: 2px solid #fff
+    }
+
+    .chat .chat-history ul {
+      padding: 0
+    }
+
+    .chat .chat-history ul li {
+      list-style: none;
+      margin-bottom: 30px
+    }
+
+    .chat .chat-history ul li:last-child {
+      margin-bottom: 0px
+    }
+
+    .chat .chat-history .message-data {
+      margin-bottom: 15px
+    }
+
+    .chat .chat-history .message-data img {
+      border-radius: 40px;
+      width: 40px
+    }
+
+    .chat .chat-history .message-data-time {
+      color: #434651;
+      padding-left: 6px
+    }
+
+    .chat .chat-history .message {
+      color: #444;
+      padding: 18px 20px;
+      line-height: 26px;
+      font-size: 16px;
+      border-radius: 7px;
+      display: inline-block;
+      position: relative
+    }
+
+    .chat .chat-history .message:after {
+      bottom: 100%;
+      left: 7%;
+      border: solid transparent;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+      border-bottom-color: #fff;
+      border-width: 10px;
+      margin-left: -10px
+    }
+
+    .chat .chat-history .my-message {
+      background: #efefef
+    }
+
+    .chat .chat-history .my-message:after {
+      bottom: 100%;
+      left: 30px;
+      border: solid transparent;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+      border-bottom-color: #efefef;
+      border-width: 10px;
+      margin-left: -10px
+    }
+
+    .chat .chat-history .other-message {
+      background: #e8f1f3;
+      text-align: right
+    }
+
+    .chat .chat-history .other-message:after {
+      border-bottom-color: #e8f1f3;
+      left: 93%
+    }
+
+    .chat .chat-message {
+      padding: 20px
+    }
+
+    .me {
+      color: #1d8ecd
+    }
+
+    .float-right {
+      float: right
+    }
+
+    .clearfix:after {
+      visibility: hidden;
+      display: block;
+      font-size: 0;
+      content: " ";
+      clear: both;
+      height: 0
+    }
+
+    @media only screen and (max-width: 767px) {
+      .chat-app .people-list {
+        height: 465px;
+        width: 100%;
+        overflow-x: auto;
+        background: #fff;
+        left: -400px;
+        display: none
+      }
+
+      .chat-app .people-list.open {
+        left: 0
+      }
+
+      .chat-app .chat {
+        margin: 0
+      }
+
+      .chat-app .chat .chat-header {
+        border-radius: 0.55rem 0.55rem 0 0
+      }
+
+      .chat-app .chat-history {
+        height: 300px;
+        overflow-x: auto
+      }
+    }
+
+    @media only screen and (min-width: 768px) and (max-width: 992px) {
+      .chat-app .chat-list {
+        height: 650px;
+        overflow-x: auto
+      }
+
+      .chat-app .chat-history {
+        height: 600px;
+        overflow-x: auto
+      }
+    }
+
+    @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) and (-webkit-min-device-pixel-ratio: 1) {
+      .chat-app .chat-list {
+        height: 480px;
+        overflow-x: auto
+      }
+
+      .chat-app .chat-history {
+        height: calc(100vh - 350px);
+        overflow-x: auto
+      }
+    }
+
+    .avatar-img {
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    var socket = io(); // Inicializamos socketIO en el cliente
+    /*
+     * Emitimos un evento de tipo 'nuevo mensaje' cada vez
+     * que se presiona el botón enviar*/
+    function enviarMensaje() {
+      var nombreUsuario = $('#nombre-usuario').val();
+      var mensaje = $('#nuevo-msj').val();
+      socket.emit('nuevo mensaje', { usuario: nombreUsuario, mensaje: mensaje });
+      $('#nuevo-msj').val('');
+    };
+  </script>
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+  <div class="container">
+    <div class="row clearfix">
+      <div class="col-lg-12">
+        <div class="card chat-app">
+          <div class="chat">
+            <div class="chat-header clearfix">
+              <div class="row">
+                <div class="col-lg-6">
+                  <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
+                    <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="avatar">
+                  </a>
+                  <div class="chat-about" id="env-msjs">
+                    <input id="nombre-usuario" class="form-control" placeholder="Nombre de usuario">
+                  </div>
+                </div>
+                <div class="col-lg-6 hidden-sm text-right">
+                  <a href="javascript:void(0);" class="btn btn-secondary"><i class="fa fa-search"></i></a>
+                  <a href="javascript:void(0);" class="btn btn-secondary"><i class="fa fa-ellipsis-v"></i></a>
+                </div>
+              </div>
+            </div>
+            <div class="chat-history">
+              <ul class="m-b-0" id="listado-msjs">
+            <script>
+              socket.on('nuevo mensaje', function (datos) {
+                // crea un nuevo elemento de lista para el mensaje
+                var nuevoMensaje = $('<li>');
+                // crea una imagen de avatar para el mensaje con una máscara circular
+                var avatar = $('<img>').attr('src', 'https://bootdey.com/img/Content/avatar/avatar1.png').attr('alt', 'avatar').addClass("avatar-img");
+                // crea un elemento de texto para el mensaje
+                var mensajeTexto = $('<span>').text(datos.usuario + ": " + datos.mensaje);
+                // agrega la imagen de avatar y el elemento de texto al elemento de lista del mensaje
+                nuevoMensaje.append(avatar).append(mensajeTexto);
+                // agrega el elemento de lista del mensaje a la lista de mensajes
+                $('#listado-msjs').append(nuevoMensaje);
+              });
+            </script>
+            </ul>
+          </div>
+          <div class="chat-message clearfix">
+            <div class="input-group mb-0">
+              <input id="nuevo-msj" class="form-control" placeholder="Escribe el mensaje...">&nbsp;
+              <div class="input-group-prepend">
+                <a href="" class="btn btn-outline-primary"><i class="fa fa-image"></i></a>&nbsp;
+                <span class="input-group-text" onclick="enviarMensaje()"><i class="fa fa-send"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+
+
+</body>
+
+</html>
